@@ -1,51 +1,54 @@
 // imports
 const { ethers, run, network } = require("hardhat")
+const dotenv = require("dotenv")
+dotenv.config()
 
-// async main
 async function main() {
-  const SimpleStorageFactory = await ethers.getContractFactory("SimpleStorage")
-  console.log("Deploying contract...")
-  const simpleStorage = await SimpleStorageFactory.deploy()
-  await simpleStorage.deployed()
-  console.log(`Deployed contract to: ${simpleStorage.address}`)
-  // what happens when we deploy to our hardhat network?
-  if (network.config.chainId === 5 && process.env.ETHERSCAN_API_KEY) {
-    console.log("Waiting for block confirmations...")
-    await simpleStorage.deployTransaction.wait(6)
-    await verify(simpleStorage.address, [])
-  }
+    // get contract factory
+    const SimpleStorageFactory = await ethers.getContractFactory(
+        "SimpleStorage"
+    )
+    console.log("Deploying contract...")
+    // deploy contract
+    const simpleStorage = await SimpleStorageFactory.deploy()
+    // wait for contract to be deployed
+    await simpleStorage.deployed()
+    console.log(`Deployed contract to: ${simpleStorage.address}`)
 
-  const currentValue = await simpleStorage.retrieve()
-  console.log(`Current Value is: ${currentValue}`)
+    // get current value
+    const currentValue = await simpleStorage.retrieve()
+    console.log(`Current Value is: ${currentValue}`)
 
-  // Update the current value
-  const transactionResponse = await simpleStorage.store(7)
-  await transactionResponse.wait(1)
-  const updatedValue = await simpleStorage.retrieve()
-  console.log(`Updated Value is: ${updatedValue}`)
+    // Update the current value
+    const transactionResponse = await simpleStorage.store(7)
+    // wait for transaction to be mined
+    await transactionResponse.wait(1)
+    // get updated value
+    const updatedValue = await simpleStorage.retrieve()
+    console.log(`Updated Value is: ${updatedValue}`)
 }
 
-// async function verify(contractAddress, args) {
-const verify = async (contractAddress, args) => {
-  console.log("Verifying contract...")
-  try {
-    await run("verify:verify", {
-      address: contractAddress,
-      constructorArguments: args,
-    })
-  } catch (e) {
-    if (e.message.toLowerCase().includes("already verified")) {
-      console.log("Already Verified!")
-    } else {
-      console.log(e)
-    }
-  }
-}
+// async function to verify contract on Etherscan
+// const verify = async (contractAddress, args) => {
+//     console.log("Verifying contract...")
+//     try {
+//         await run("verify:verify", {
+//             address: contractAddress,
+//             constructorArguments: args,
+//         })
+//     } catch (e) {
+//         if (e.message.toLowerCase().includes("already verified")) {
+//             console.log("Already Verified!")
+//         } else {
+//             console.log(e)
+//         }
+//     }
+// }
 
 // main
 main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error)
-    process.exit(1)
-  })
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error(error)
+        process.exit(1)
+    })
